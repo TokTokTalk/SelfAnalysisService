@@ -1,0 +1,10 @@
+{
+  "port":1337,
+  "facebook":{
+    "api_key"       :     "1059323937432706",
+    "api_secret"    :     "445f3f3fd6fb7ed9a244b63c4ed0f265",
+    "callback_url"  :     "http://localhost:1337/auth/facebook/callback",
+    "use_database"  :     "false"
+   }
+
+}
