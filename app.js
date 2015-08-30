@@ -7,11 +7,14 @@ var express             = require('express')
     ,bodyParser         = require('body-parser')
     ,session            =require('express-session')
     ,passport           = require('passport')
-    ,FacebookStrategy   = require('passport-facebook').Strategy
-    ,config             = require('./config/app_config');
+    ,FacebookStrategy   = require('passport-facebook').Strategy;
 
 
 
+global._Config = require('./config/app_config');
+global._Common = require('./common');
+
+/*
 // Passport session setup.
 passport.serializeUser(function(user, done) {
   done(null, user);
@@ -21,9 +24,9 @@ passport.deserializeUser(function(obj, done) {
 });
 // Use the FacebookStrategy within Passport.
 passport.use(new FacebookStrategy({
-    clientID: config.facebook.api_key,
-    clientSecret:config.facebook.api_secret ,
-    callbackURL: config.facebook.callback_url
+    clientID: _Config.facebook.api_key,
+    clientSecret:_Config.facebook.api_secret ,
+    callbackURL: _Config.facebook.callback_url
   },
   function(accessToken, refreshToken, profile, done) {
 
@@ -38,11 +41,11 @@ passport.use(new FacebookStrategy({
 
   }
 ));
-
+*/
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'ejs');
+app.set('view engine', 'jade');
 
 // uncomment after placing your favicon in /public
 //app.use(favicon(__dirname + '/public/favicon.ico'));
@@ -50,16 +53,19 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(session({ secret: 'keyboard cat', key: 'sid'}));
-app.use(passport.initialize());
-app.use(passport.session());
+//app.use(session({ secret: 'sec', key: 'sid'}));
+//app.use(passport.initialize());
+//app.use(passport.session());
 app.use(express.static(path.join(__dirname, 'public')));
 
-//Router code
-app.get('/', function(req, res){
-  //res.render('index', { user: req.user });
-  res.send({ user: req.user });
-});
+
+//routes
+var index    = require('./routes/index');
+var database = require('./routes/database');
+app.use('/', index);
+app.use('/database', database);
+
+/*
 app.get('/account', ensureAuthenticated, function(req, res){
   //res.render('account', { user: req.user });
   res.send({ user: req.user });
@@ -69,8 +75,6 @@ app.get('/fail', function(req, res){
   res.send({msg:'fail'});
 });
 
-
-//Passport Router
 app.get('/auth/facebook', passport.authenticate('facebook'));
 app.get('/auth/facebook/callback',
   passport.authenticate('facebook', {
@@ -88,6 +92,8 @@ function ensureAuthenticated(req, res, next) {
   if (req.isAuthenticated()) { return next(); }
   res.redirect('/fail')
 }
+*/
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -120,6 +126,7 @@ app.use(function(err, req, res, next) {
     });
 });
 
-app.listen(1337);
+app.listen(_Config.PORT);
+console.log('server start!');
 
 module.exports = app;
