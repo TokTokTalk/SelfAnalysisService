@@ -84,4 +84,61 @@ router.get('/find', function(req, res, next){
 });
 
 
+
+/**
+ * @apiVersion 0.0.1
+ * @api {post} /document/create create Document
+ * @apiPermission None
+ * @apiName CreateDocument
+ * @apiGroup Document
+ * @apiSampleRequest off
+ *
+ * @apiParam {String} database database 명
+ * @apiParam {String} collection 컬렉션명
+ * @apiParam {Object} create_doc 생성할 다큐먼트
+ *
+ * @apiSuccess {Number} code 결과 코드
+ * @apiSuccess {Object} result 생성된 Document
+ *
+ */
+
+router.post('/create',function(req, res, next){
+  var database_name   = req.body.database;
+  var collection_name = req.body.collection;
+  var create_doc      = req.body.create_doc;
+
+  DBClient.getDatabase(database_name, function(err0, db){
+    if(err0){
+      next(err0);
+    }else{
+
+      var collection = db.collection( collection_name );
+      var cursor = collection.find({}, {'seq_number':1, _id:0}, {sort:{seq_number:-1}, limit : 1});
+      cursor.toArray(function(err1, next_seq){
+        if(err1){
+          next(err1);
+        }else{
+
+          if(next_seq.length == 0){
+            create_doc['seq_number'] = 1;
+          }else{
+            create_doc['seq_number'] = Number(next_seq[0]['seq_number'])+1;
+          }
+
+          collection.insert(create_doc,{w:1}, function(err2, created){
+            if(err2){
+              next(err2);
+            }else{
+              create_doc['_id'] = created['electionId'];
+              res.status(200).send(create_doc);
+            }
+          });
+
+        }
+      });
+    }
+  });
+
+});
+
 module.exports = router;

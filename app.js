@@ -5,43 +5,29 @@ var express             = require('express')
     ,logger             = require('morgan')
     ,cookieParser       = require('cookie-parser')
     ,bodyParser         = require('body-parser')
-    ,session            =require('express-session')
+    ,session            = require('express-session')
     ,passport           = require('passport')
-    ,FacebookStrategy   = require('passport-facebook').Strategy;
-
+    ,FacebookStrategy   = require('passport-facebook').Strategy
+    ,LocalStrategy      = require('passport-local').Strategy
+    ,redis              = require('redis')
+    ,RedisStore         = require('connect-redis')(session);
 
 
 global._Config = require('./config/app_config');
 global._Common = require('./common');
 
-/*
-// Passport session setup.
-passport.serializeUser(function(user, done) {
-  done(null, user);
-});
-passport.deserializeUser(function(obj, done) {
-  done(null, obj);
-});
-// Use the FacebookStrategy within Passport.
-passport.use(new FacebookStrategy({
-    clientID: _Config.facebook.api_key,
-    clientSecret:_Config.facebook.api_secret ,
-    callbackURL: _Config.facebook.callback_url
-  },
-  function(accessToken, refreshToken, profile, done) {
 
-    process.nextTick(function () {
-      //Check whether the User exists or not using profile.id
-      //Further DB code.
-      console.log(accessToken);
-      console.log(refreshToken);
-      console.log(profile);
-      return done(null, profile);
-    });
-
-  }
-));
-*/
+app.use(session({
+  secret : 'secret',
+  store : new RedisStore({
+    host : _Config.REDIS.HOST,
+    port : _Config.REDIS.PORT,
+    prefix:'sess:'
+  }),
+  cookie : {secure : false, maxAge : _Config.SESSION_TIME},
+  resave : true,
+  saveUninitialized : true
+}));
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -64,36 +50,6 @@ var index    = require('./routes/index');
 var database = require('./routes/database');
 app.use('/', index);
 app.use('/database', database);
-
-/*
-app.get('/account', ensureAuthenticated, function(req, res){
-  //res.render('account', { user: req.user });
-  res.send({ user: req.user });
-});
-
-app.get('/fail', function(req, res){
-  res.send({msg:'fail'});
-});
-
-app.get('/auth/facebook', passport.authenticate('facebook'));
-app.get('/auth/facebook/callback',
-  passport.authenticate('facebook', {
-       successRedirect : '/',
-       failureRedirect: '/fail'
-  }),
-  function(req, res) {
-    res.redirect('/');
-  });
-app.get('/logout', function(req, res){
-  req.logout();
-  res.redirect('/');
-});
-function ensureAuthenticated(req, res, next) {
-  if (req.isAuthenticated()) { return next(); }
-  res.redirect('/fail')
-}
-*/
-
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
