@@ -3,7 +3,7 @@ var Join        = require('mongo-join').Join;
 
 var DB = {};
 var URL = {
-  'toktoctalk-products':'mongodb://' + _Config.MONGO.HOST + '/toktoctalk-products'
+  'toctoktalk-products':'mongodb://' + _Config.MONGO.HOST + '/toctoktalk-products'
 };
 
 module.exports = {

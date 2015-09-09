@@ -40,10 +40,6 @@ router.get('/find', function(req, res, next){
   if(!skip) skip   = 0;
   if(!limit) limit = 0;
 
-  console.log(database_name);
-  console.log(collection_name);
-
-
   skip = limit*skip;
 
   if(query['_id']){
@@ -103,9 +99,12 @@ router.get('/find', function(req, res, next){
  */
 
 router.post('/create',function(req, res, next){
+
   var database_name   = req.body.database;
   var collection_name = req.body.collection;
-  var create_doc      = req.body.create_doc;
+  var create_doc      = req.body.entity;
+
+  console.log(req.body);
 
   DBClient.getDatabase(database_name, function(err0, db){
     if(err0){
@@ -113,24 +112,19 @@ router.post('/create',function(req, res, next){
     }else{
 
       var collection = db.collection( collection_name );
-      var cursor = collection.find({}, {'seq_number':1, _id:0}, {sort:{seq_number:-1}, limit : 1});
-      cursor.toArray(function(err1, next_seq){
+      getMaxVal(collection, {}, 'seq_number', function(err1, maxVal){
         if(err1){
           next(err1);
         }else{
 
-          if(next_seq.length == 0){
-            create_doc['seq_number'] = 1;
-          }else{
-            create_doc['seq_number'] = Number(next_seq[0]['seq_number'])+1;
-          }
+          var nextSeq = Number(maxVal) + 1;
+          create_doc['seq_number'] = nextSeq;
 
           collection.insert(create_doc,{w:1}, function(err2, created){
             if(err2){
               next(err2);
             }else{
-              create_doc['_id'] = created['electionId'];
-              res.status(200).send(create_doc);
+              res.status(200).send(created.ops);
             }
           });
 
@@ -140,5 +134,25 @@ router.post('/create',function(req, res, next){
   });
 
 });
+
+function getMaxVal(client, query, field, callback){
+
+  var filter = {};
+  filter[field] = true;
+
+  var sort = {};
+  sort[field] = -1;
+
+  client.find(query, filter, {sort:sort, limit:1}).toArray(function(err, maxVal){
+    if(err) callback(err);
+    else{
+      if(maxVal.length == 0){
+        callback(null, 0);
+      }else{
+        callback(null, maxVal[0][field]);
+      }
+    }
+  });
+}
 
 module.exports = router;

@@ -5,11 +5,26 @@ var router = express.Router();
 var DBClient = _Common.DBClient;
 var Utils    = _Common.Utils;
 
-/* GET users listing. */
-router.post('/insertOrLogin', function(req, res) {
+/**
+ * @apiVersion 0.0.1
+ * @api {post} /document/joinOrLogin joinOrLogin
+ * @apiPermission None
+ * @apiName joinOrLogin
+ * @apiGroup User
+ * @apiSampleRequest off
+ *
+ * @apiParam {String} database database 명
+ * @apiParam {String} collection 컬렉션명
+ * @apiParam {Object} entity 유저정보
+ *
+ * @apiSuccess {Number} code 결과 코드
+ * @apiSuccess {Object} result 가입 or 로그온 유저정보
+ *
+ */
+router.post('/joinOrLogin', function(req, res, next) {
   var database_name   = req.body.database;
   var collection_name = req.body.collection;
-  var user_profile            = req.body.user_profile;
+  var user_profile    = req.body.entity;
 
   DBClient.getDatabase(database_name, function(err0, db){
     if(err0){
@@ -17,22 +32,20 @@ router.post('/insertOrLogin', function(req, res) {
     }else{
 
       var collection = db.collection( collection_name );
-      var cursor = collection.find({}, {'seq_number':1, _id:0}, {sort:{seq_number:-1}, limit : 1});
-      cursor.toArray(function(err1, next_seq){
+
+
+      getMaxVal(collection, {}, 'seq_number', function(err1, maxVal){
         if(err1){
           next(err1);
         }else{
-
-          if(next_seq.length == 0){
-            user_profile['seq_number'] = 1;
-          }else{
-            user_profile['seq_number'] = Number(next_seq[0]['seq_number'])+1;
-          }
+          var next_seq = Number(maxVal) + 1;
+          user_profile['seq_number'] = next_seq;
 
           collection.findAndModify(
-            {user_id : user_profile.fb_id},
+            {fb_id : user_profile.fb_id},
+            {_id:1},
             {
-              $set : user_profile
+              $setOnInsert : user_profile
             },
             {
               new : true,
@@ -41,9 +54,9 @@ router.post('/insertOrLogin', function(req, res) {
             function(err2, doc){
               if(err2){
                 next(err2);
-              }else{
-                req.session.user_profile = doc;
-                res.status(200).send(doc);
+              }else{                
+                req.session.user_profile = doc.value;
+                res.status(200).send(doc.value);
               }
             });
         }
@@ -52,5 +65,26 @@ router.post('/insertOrLogin', function(req, res) {
   });
 
 });
+
+function getMaxVal(client, query, field, callback){
+
+  var filter = {};
+  filter[field] = true;
+
+  var sort = {};
+  sort[field] = -1;
+
+  client.find(query, filter, {sort:sort, limit:1}).toArray(function(err, maxVal){
+    if(err) callback(err);
+    else{
+      if(maxVal.length == 0){
+        callback(null, 0);
+      }else{
+        callback(null, maxVal[0][field]);
+      }
+    }
+  });
+}
+
 
 module.exports = router;
