@@ -8,11 +8,11 @@
     "use_database"  :     "false"
   },
   "MONGO":{
-    "HOST":"loopyseo-vm.cloudapp.net:10001,loopyseo-vm.cloudapp.net:10002,loopyseo-vm.cloudapp.net:10003"
+    "HOST":"loopyseo-vm.cloudapp.net:27017"
   },
   "REDIS":{
-    "HOST":"",
-    "PORT":""
+    "HOST":"loopyseo-vm.cloudapp.net",
+    "PORT":6379
   }
 
 }
