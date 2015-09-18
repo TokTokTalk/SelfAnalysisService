@@ -16,7 +16,7 @@ var express             = require('express')
 global._Config = require('./config/app_config');
 global._Common = require('./common');
 
-
+/*
 app.use(session({
   secret : 'secret',
   store : new RedisStore({
@@ -25,9 +25,10 @@ app.use(session({
     prefix:'sess:'
   }),
   cookie : {secure : false, maxAge : _Config.SESSION_TIME},
-  resave : true,
+  resave : false,
   saveUninitialized : true
 }));
+*/
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -39,7 +40,7 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-//app.use(session({ secret: 'sec', key: 'sid'}));
+app.use(session({ secret: 'sec', key: 'sid'}));
 //app.use(passport.initialize());
 //app.use(passport.session());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -52,6 +53,11 @@ var users = require('./routes/users');
 app.use('/', index);
 app.use('/database', database);
 app.use('/users', users);
+
+app.use(function (req, res, next) {
+  res.contentType('application/json');
+  next();
+});
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -66,15 +72,16 @@ app.use(function(req, res, next) {
 // will print stacktrace
 if (app.get('env') === 'development') {
     app.use(function(err, req, res, next) {
-        console.error(err);
-        res.status(err.status || 500).send(err);
+      console.log('err75');
+      //console.error(err.stack);
+      res.status(err.status || 500).send(err);
     });
 }
 
 // production error handler
 // no stacktraces leaked to user
 app.use(function(err, req, res, next) {
-  console.error(err.stack);
+  console.log('err84');
   res.status(err.status || 500).send(err);
 });
 

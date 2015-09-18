@@ -2,8 +2,11 @@
 var express = require('express');
 var router = express.Router();
 
-var DBClient = _Common.DBClient;
-var Utils    = _Common.Utils;
+
+
+var Mongo = _Common.MongoUtils;
+var MongoWrapper = _Common.MongoWrapper;
+var Utils = _Common.Utils;
 
 /**
  * @apiVersion 0.0.1
@@ -25,59 +28,57 @@ var Utils    = _Common.Utils;
  * @apiSuccess {Object} result 요청한 Documents
  *
  */
-router.get('/find', function(req, res, next){
-  var params          = JSON.parse(req.query.params);
-  var database_name   = params.database;
-  var collection_name = params.collection;
-  var query      = params.query;
-  var sort       = params.sort;
-  var skip       = params.page_number;
-  var limit      = params.page_size;
-  var join_colls = params.join_colls;
+ router.get('/find', function(req, res, next){
+   var params          = JSON.parse(req.query.params);
+   var database_name   = params.database;
+   var collection_name = params.collection;
+   var find      = params.find;
+   var sort       = params.sort;
+   var skip       = params.page_number;
+   var limit      = params.page_size;
+   var join_colls = params.join_colls;
 
-  if(!query) query = {};
-  if(!sort) sort   = {'_id':1};
-  if(!skip) skip   = 0;
-  if(!limit) limit = 0;
+   if(!sort) sort   = {'_id':1};
+   if(!skip) skip   = 0;
+   if(!limit) limit = 0;
 
-  skip = limit*skip;
+   skip = limit*skip;
 
-  if(query['_id']){
-    if(query['_id']['$in']){
-      query['_id']['$in'] = Utils.getObjectId(query['_id']['$in']);
-    }else{
-      query['_id'] = Utils.getObjectId(query['_id']);
-    }
-  }
+   console.log(params);
 
-  DBClient.getDatabase(database_name, function(err0, db){
-    if(err0){
-      next(err0);
-    }else{
-      var collection = db.collection( collection_name );
-      var cursor = collection.find(query, {sort:sort, skip:skip, limit:limit});
+   if(find['_id']){
+     if(find['_id']['$in']){
+       find['_id']['$in'] = Mongo.getObjectId(find['_id']['$in']);
+     }else{
+       find['_id'] = Mongo.getObjectId(find['_id']);
+     }
+   }
 
-      if(join_colls){
-        DBClient.getRefDocument(db, join_colls, cursor, function(err2, docs){
-          if(err2){
-            next(err2);
-          }else{
-            res.status(200).send({result:docs, code:200});
-          }
-        });
-      }else{
-          cursor.toArray(function(err1, docs){
-            if(err1){
-              next(err1);
-            }else{
-              res.status(200).send({result:docs, code:200});
-            }
-          });
-      }
-    }
-
-  });
-});
+   Mongo.getCollection(collection_name, function(err0, collection){
+     if(err0){
+       next(err0);
+     }else{
+       var cursor = collection.find(find, {sort:sort, skip:skip, limit:limit});
+       if(join_colls){
+         Mongo.getRefDocument(join_colls, cursor, function(err1, docs){
+           if(err1){
+             next(err1);
+           }else{
+             res.status(200).send({result:docs, code:200});
+           }
+         });
+       }else{
+           cursor.toArray(function(err2, docs){
+             if(err2){
+               next(err2);
+             }else{
+               res.status(200).send({result:docs, code:200});
+             }
+           });
+       }
+     }
+   });
+ });
 
 
 
@@ -98,59 +99,131 @@ router.get('/find', function(req, res, next){
  *
  */
 
-router.post('/create',function(req, res, next){
+ router.post('/create',function(req, res, next){
+   var database_name   = req.body.database;
+   var collection_name = req.body.collection;
+   var create_doc      = req.body.entity;
 
+   console.log(req.body);
+
+   Mongo.getCollection(collection_name, function(err0, collection){
+     if(err0){
+       next(err0);
+     }else{
+       Mongo.getNextSeqNumber(collection, function(err1, nextSeq){
+         if(err1){
+           next(err1);
+         }else{
+           create_doc['seq_number'] = nextSeq;
+
+           collection.insert(create_doc,{w:1}, function(err2, created){
+             if(err2){
+               next(err2);
+             }else{
+               create_doc['_id'] = created['electionId'];
+               res.status(200).send({result : create_doc});
+             }
+           });
+
+         }
+       });
+     }
+   });
+ });
+
+router.post('/findOrCreate',function(req, res, next){
   var database_name   = req.body.database;
   var collection_name = req.body.collection;
   var create_doc      = req.body.entity;
+  var find           = req.body.find;
 
   console.log(req.body);
 
-  DBClient.getDatabase(database_name, function(err0, db){
+  Mongo.getCollection(collection_name, function(err0, collection){
     if(err0){
       next(err0);
     }else{
-
-      var collection = db.collection( collection_name );
-      getMaxVal(collection, {}, 'seq_number', function(err1, maxVal){
+      Mongo.getNextSeqNumber(collection, function(err1, nextSeq){
         if(err1){
           next(err1);
         }else{
-
-          var nextSeq = Number(maxVal) + 1;
           create_doc['seq_number'] = nextSeq;
-
-          collection.insert(create_doc,{w:1}, function(err2, created){
-            if(err2){
-              next(err2);
-            }else{
-              res.status(200).send(created.ops);
-            }
-          });
-
+          collection.findAndModify(
+            find,
+            {_id:1},
+            {
+              $setOnInsert : create_doc
+            },
+            {
+              new : true,
+              upsert:true
+            },
+            function(err2, doc){
+              console.log(doc);
+              if(err2){
+                next(err2);
+              }else{
+                res.status(200).send({result:doc.value});
+              }
+            });
         }
       });
     }
   });
-
 });
 
-function getMaxVal(client, query, field, callback){
 
-  var filter = {};
-  filter[field] = true;
+router.post('/insertKeyword',function(req, res, next){
+  var collection_name = 'keyword';
+  var create_doc      = req.body.create_doc;
+  var find            = req.body.find;
 
-  var sort = {};
-  sort[field] = -1;
+  Mongo.getCollection(collection_name, function(err0, collection){
+    if(err0){
+      next(err0);
+    }else{
+      MongoWrapper.findOrCreate(collection, find, create_doc, function(err1, doc1){
+        if(err1){
+          next(err1);
+        }else{
+          var isExisting = doc1.lastErrorObject.updatedExisting;
+          if(isExisting){
+              res.status(200).json({result:{doc : doc1.value, isExisting : isExisting}});
+          }else{
+            req.trigger_args = doc1.value;
+            next();
+          }
+        }
+      });
+    }
+  });
+}, insertKeywordToCategory);
 
-  client.find(query, filter, {sort:sort, limit:1}).toArray(function(err, maxVal){
-    if(err) callback(err);
-    else{
-      if(maxVal.length == 0){
-        callback(null, 0);
-      }else{
-        callback(null, maxVal[0][field]);
-      }
+function insertKeywordToCategory(req, res, next){
+  var doc = req.trigger_args;  
+
+  Mongo.getCollection('category', function(err0, collection){
+    if(err0){
+      next(err0);
+    }else{
+      var find = {
+        _id : Mongo.getObjectId(doc['cate_ref'])
+      };
+      var update = {
+        $set : {}
+      };
+
+      var insertKey = 'keyword_refs.'+doc['_id'];
+
+      update['$set'][insertKey] = doc;
+
+      MongoWrapper.findAndModify(collection, find, update, function(err2, add){
+        if(err2){
+          next(err2);
+        }else{
+          res.status(200).send({result : doc});
+        }
+      });
     }
   });
 }

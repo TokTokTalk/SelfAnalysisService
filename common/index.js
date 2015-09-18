@@ -1,2 +1,3 @@
 exports.Utils    = require('./Utils');
-exports.DBClient = require('./DBClient');
+exports.MongoUtils = require('./mongo_utils');
+exports.MongoWrapper = require('./mongo_wrapper');

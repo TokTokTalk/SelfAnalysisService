@@ -2,7 +2,7 @@ var express = require('express');
 var router = express.Router();
 
 
-var DBClient = _Common.DBClient;
+var Mongo = _Common.MongoUtils;
 var Utils    = _Common.Utils;
 
 /**
@@ -26,21 +26,15 @@ router.post('/joinOrLogin', function(req, res, next) {
   var collection_name = req.body.collection;
   var user_profile    = req.body.entity;
 
-  DBClient.getDatabase(database_name, function(err0, db){
+  Mongo.getCollection(collection_name, function(err0, collection){
     if(err0){
       next(err0);
     }else{
-
-      var collection = db.collection( collection_name );
-
-
-      getMaxVal(collection, {}, 'seq_number', function(err1, maxVal){
+      Mongo.getNextSeqNumber(collection, function(err1, nextSeq){
         if(err1){
           next(err1);
         }else{
-          var next_seq = Number(maxVal) + 1;
-          user_profile['seq_number'] = next_seq;
-
+          user_profile['seq_number'] = nextSeq;          
           collection.findAndModify(
             {fb_id : user_profile.fb_id},
             {_id:1},
@@ -54,13 +48,41 @@ router.post('/joinOrLogin', function(req, res, next) {
             function(err2, doc){
               if(err2){
                 next(err2);
-              }else{                
+              }else{
                 req.session.user_profile = doc.value;
-                res.status(200).send(doc.value);
+                res.status(200).send({result:doc.value});
               }
             });
         }
       });
+    }
+  });
+
+});
+
+
+router.get('/login', function(req, res, next) {
+  var params          = JSON.parse(req.query.params);
+  var database_name   = 'toctoktalk-products';
+  var collection_name = 'user';
+  var fb_id = params.fb_id;
+
+  DBClient.getDatabase(database_name, function(err0, db){
+    if(err0){
+      next(err0);
+    }else{
+
+      var collection = Mongo.collection( collection_name );
+      collection.findOne({fb_id : fb_id}, function(err1, user){
+        if(err1){
+          next(err1);
+        }else{
+          req.session.user_profile = user;
+          res.status(200).send({result:user});
+        }
+      });
+
+
     }
   });
 
