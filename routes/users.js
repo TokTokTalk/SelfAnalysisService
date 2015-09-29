@@ -1,9 +1,13 @@
 var express = require('express');
 var router = express.Router();
-
+var dateformat = require('dateformat');
+var now    = new Date();
 
 var Mongo = _Common.MongoUtils;
 var Utils    = _Common.Utils;
+
+
+var Template = _Common.Template;
 
 /**
  * @apiVersion 0.0.1
@@ -34,7 +38,7 @@ router.post('/joinOrLogin', function(req, res, next) {
         if(err1){
           next(err1);
         }else{
-          user_profile['seq_number'] = nextSeq;          
+          user_profile['seq_number'] = nextSeq;
           collection.findAndModify(
             {fb_id : user_profile.fb_id},
             {_id:1},
@@ -50,7 +54,13 @@ router.post('/joinOrLogin', function(req, res, next) {
                 next(err2);
               }else{
                 req.session.user_profile = doc.value;
-                res.status(200).send({result:doc.value});
+
+                var isExisting = doc.lastErrorObject.updatedExisting;
+                if(isExisting){
+                  res.status(200).send({result:{user : req.session.user_profile, icon_list : []}});
+                }else{
+                    next();
+                }
               }
             });
         }
@@ -58,7 +68,125 @@ router.post('/joinOrLogin', function(req, res, next) {
     }
   });
 
-});
+}, createCategoryTemp, createKeyword);
+
+function createCategoryTemp(req, res, next){
+  var userRefId = req.session.user_profile['_id'];
+  var collection_name = 'category';
+
+  var dt = new Date();
+
+
+  Mongo.getCollection(collection_name, function(err0, collection){
+    if(err0){
+      next(err0);
+    }else{
+      Mongo.getNextSeqNumber(collection, function(err1, nextSeq){
+        if(err1){
+          next(err1);
+        }else{
+          var insertCategory = [];
+          var idx = 0;
+          for(var key in Template){
+            var obj = {
+              cate_name : key,
+              seq_number : Number(nextSeq+idx),
+              timestamp : now.getTime(),
+              start_dt  : dateformat(now, 'yyyymmdd'),
+              user_ref : userRefId.toString()
+            }
+            insertCategory.push(obj);
+            idx++;
+          }
+          collection.insert(insertCategory, {w:1}, function(err2, created){
+            if(err2){
+              next(err2);
+            }else{
+              var createdCategory = created.ops;
+              req.category = createdCategory
+              next();
+              //res.status(200).send({result:"OK"});
+            }
+          });
+        }
+      });
+
+    }
+  });
+}
+
+function createKeyword(req, res, next){
+  var categoryList = req.category;
+  var collection_name = 'keyword';
+  console.log(collection_name);
+
+  Mongo.getCollection(collection_name, function(err0, collection){
+    if(err0){
+      next(err0);
+    }else{
+      Mongo.getNextSeqNumber(collection, function(err1, nextSeq){
+        if(err1){
+          next(err1);
+        }else{
+          var insertKeyword = [];
+          var retFileList   = [];
+          var idx = 0;
+          for(var i in categoryList){
+              var category = categoryList[i];
+              var cate_name = category['cate_name'];
+              var keywordList = Template[cate_name];
+              for(var k in keywordList){
+                var keyword = keywordList[k];
+                var keyObj = {
+                  keyword : keyword['keyword'],
+                  timestamp : now.getTime(),
+                  cate_ref : category['_id'].toString(),
+                  seq_number : Number(nextSeq + idx)
+                };
+                retFileList.push(keyword['icon_file_name']);
+                insertKeyword.push(keyObj);
+                idx++;
+              }
+          }
+
+          collection.insert(insertKeyword, {w:1}, function(err2, created){
+            if(err2){
+              next(err2);
+            }else{
+              var retFileList = {};
+              var createdKeywords = created.ops;
+              for(var i in createdKeywords){
+                var item = createdKeywords[i];
+                var key = item['_id'];
+                var value = getKeywordTempObj()[item.keyword];
+                item['icon_file_name'] = value;
+                retFileList[key] = item;
+              }
+
+              console.log(retFileList);
+
+              res.status(200).send({result:{user : req.session.user_profile, icon_list : retFileList}});
+            }
+          });
+        }
+      });
+    }
+  });
+
+}
+
+function getKeywordTempObj(){
+  var keywordObjs = {};
+  for(var key in Template){
+    var temp = Template[key];
+    for(var i in temp){
+      var keywords = temp[i];
+      keywordObjs[keywords['keyword']] = keywords['icon_file_name'];
+    }
+  }
+
+  return keywordObjs;
+}
 
 
 router.get('/login', function(req, res, next) {
@@ -88,25 +216,7 @@ router.get('/login', function(req, res, next) {
 
 });
 
-function getMaxVal(client, query, field, callback){
 
-  var filter = {};
-  filter[field] = true;
-
-  var sort = {};
-  sort[field] = -1;
-
-  client.find(query, filter, {sort:sort, limit:1}).toArray(function(err, maxVal){
-    if(err) callback(err);
-    else{
-      if(maxVal.length == 0){
-        callback(null, 0);
-      }else{
-        callback(null, maxVal[0][field]);
-      }
-    }
-  });
-}
 
 
 module.exports = router;

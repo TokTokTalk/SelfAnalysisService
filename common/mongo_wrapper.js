@@ -2,7 +2,7 @@ var Mongo = require('./mongo_utils');
 
 module.exports = {
   findDocs : function(collection, find, opt, join_colls, callback){
-    var cursor = collection.find(find, {sort:sort, skip:skip, limit:limit});
+    var cursor = collection.find(find, opt);
     if(join_colls){
       Mongo.getRefDocument(join_colls, cursor, function(err1, docs){
         if(err1){
@@ -21,7 +21,15 @@ module.exports = {
         });
     }
   }
-
+  ,findDoc : function(collection, find, callback){
+    collection.findOne(find, function(err1, doc){
+      if(err1){
+        callback(err1);
+      }else{
+        callback(null, doc);
+      }
+    });
+  }
   ,createDoc : function(collection, create_doc, callback){
     Mongo.getNextSeqNumber(collection, function(err1, nextSeq){
       if(err1){
@@ -32,8 +40,7 @@ module.exports = {
           if(err2){
             callback(err2);
           }else{
-            create_doc['_id'] = created['electionId'];
-            callback(null, create_doc);
+            callback(null, created.ops);
           }
         });
 
@@ -68,7 +75,7 @@ module.exports = {
     });
   }
 
-  ,findAndModify : function(collection, find, update, callback){    
+  ,findAndModify : function(collection, find, update, callback){
     Mongo.getNextSeqNumber(collection, function(err1, nextSeq){
       if(err1){
         callback(err1);

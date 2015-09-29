@@ -173,6 +173,7 @@ router.post('/findOrCreate',function(req, res, next){
 });
 
 
+/*
 router.post('/insertKeyword',function(req, res, next){
   var collection_name = 'keyword';
   var create_doc      = req.body.create_doc;
@@ -200,7 +201,7 @@ router.post('/insertKeyword',function(req, res, next){
 }, insertKeywordToCategory);
 
 function insertKeywordToCategory(req, res, next){
-  var doc = req.trigger_args;  
+  var doc = req.trigger_args;
 
   Mongo.getCollection('category', function(err0, collection){
     if(err0){
@@ -227,5 +228,84 @@ function insertKeywordToCategory(req, res, next){
     }
   });
 }
+*/
+
+
+router.post('/recordKeyword',function(req, res, next){
+  var collection_name = 'record';
+  var create_doc      = req.body.create_doc;
+  var find            = req.body.find;
+
+  Mongo.getCollection(collection_name, function(err0, collection){
+    if(err0){
+      next(err0);
+    }else{
+      MongoWrapper.findDoc(collection, find, function(err1, doc1){
+        if(err1){
+          next(err1);
+        }else{
+          if(!doc1){
+            MongoWrapper.createDoc(collection, create_doc, function(err2, created){
+              if(err2){
+                next(err2);
+              }else{
+                console.log('created');
+                console.log(created);
+                res.status(200).send({result : created});
+              }
+            });
+          }else{
+            MongoWrapper.findAndModify(collection, find, {$inc:{count:1}}, function(err3, finded){
+              if(err3){
+                next(err3);
+              }else{
+                console.log('increase');
+                console.log(finded)
+                res.status(200).send({result : finded.value});
+              }
+            });
+          }
+        }
+      });
+    }
+  });
+});
+
+
+router.get('/findRecord',function(req, res, next){
+  var params     = JSON.parse(req.query.params);
+  var key_ids    = params.key_ids;
+  var collection_name = "record";
+
+  Mongo.getCollection(collection_name, function(err0, collection){
+    if(err0){
+      next(err0);
+    }else{
+      var find = {keyword_ref:{$in:key_ids}};
+
+      console.log(find);
+
+      MongoWrapper.findDocs(collection, find, {sort:{record_dt:1}}, null, function(err1, docs){
+        if(err1){
+          next(err1);
+        }else{
+
+          var result = {};
+          for(var i in docs){
+            var doc = docs[i];
+            var key = doc['_id'];
+            if(!result[key]){
+              result[key] = [];
+            }
+            result[key].push(doc);
+          }         
+
+          res.status(200).send({result:result});
+        }
+      });
+    }
+  });
+});
+
 
 module.exports = router;

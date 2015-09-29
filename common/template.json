@@ -1,0 +1,119 @@
+{
+	"나를 해치는 습관들" : [
+		{
+			"keyword" : "흡연",
+			"icon_file_name" : "ico_smoking.png"
+		},
+		{
+			"keyword" : "술",
+			"icon_file_name" : "ico_alcol.png"
+		},
+		{
+			"keyword" : "과식",
+			"icon_file_name" : "ico_overeating.jpg"
+		}
+	]
+
+	,"감정 변화 분석" : [
+		{
+			"keyword" : "기쁨",
+			"icon_file_name" : "ico_happy.png"
+		},
+		{
+			"keyword" : "슬픔",
+			"icon_file_name" : "ico_sad.png"
+		},
+		{
+			"keyword" : "분노",
+			"icon_file_name" : "ico_angly.png"
+		},
+		{
+			"keyword" : "우울",
+			"icon_file_name" : "ico_gloom.png"
+		}
+	]
+	,	"음료섭취 분석" : [
+		{
+			"keyword" : "물",
+			"icon_file_name" : "ico_water.png"
+		},
+		{
+			"keyword" : "탄산",
+			"icon_file_name" : "ico_carbonated.png"
+		},
+		{
+			"keyword" : "커피",
+			"icon_file_name" : "ico_coffee.png"
+		},
+		{
+			"keyword" : "차",
+			"icon_file_name" : "ico_tea.png"
+		}
+	]
+	,"음식섭취 분석" : [
+		{
+			"keyword" : "밥",
+			"icon_file_name" : "ico_rice.png"
+		},
+		{
+			"keyword" : "빵",
+			"icon_file_name" : "ico_bread.png"
+		},
+		{
+			"keyword" : "고기",
+			"icon_file_name" : "ico_meat.png"
+		},
+		{
+			"keyword" : "야채",
+			"icon_file_name" : "ico_vegetable.png"
+		},
+		{
+			"keyword" : "과일",
+			"icon_file_name" : "ico_fruit.png"
+		},
+		{
+			"keyword" : "생선",
+			"icon_file_name" : "ico_fish.png"
+		}
+	]
+	,"식사종류 분석" : [
+		{
+			"keyword" : "한식",
+			"icon_file_name" : "ico_food_korea.png"
+		},
+		{
+			"keyword" : "중식",
+			"icon_file_name" : "ico_food_china.png"
+		},
+		{
+			"keyword" : "일식",
+			"icon_file_name" : "ico_food_japan.png"
+		},
+		{
+			"keyword" : "양식",
+			"icon_file_name" : "ico_food_western.png"
+		}
+	],
+	"운동량분석" : [
+		{
+			"keyword" : "팔",
+			"icon_file_name" : "ico_fit_arm.png"
+		},
+		{
+			"keyword" : "등",
+			"icon_file_name" : "ico_fit_back.png"
+		},
+		{
+			"keyword" : "복근",
+			"icon_file_name" : "ico_fit_abs.png"
+		},
+		{
+			"keyword" : "하체",
+			"icon_file_name" : "ico_fit_bottom.png"
+		},
+		{
+			"keyword" : "유산소",
+			"icon_file_name" : "ico_fit_run.png"
+		}
+	]
+}

@@ -49,10 +49,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 //routes
 var index    = require('./routes/index');
 var database = require('./routes/database');
-var users = require('./routes/users');
+var users    = require('./routes/users');
+var iconresource= require('./routes/iconresource');
+
 app.use('/', index);
 app.use('/database', database);
 app.use('/users', users);
+app.use('/iconresource', iconresource);
 
 app.use(function (req, res, next) {
   res.contentType('application/json');
@@ -72,8 +75,8 @@ app.use(function(req, res, next) {
 // will print stacktrace
 if (app.get('env') === 'development') {
     app.use(function(err, req, res, next) {
-      console.log('err75');
-      //console.error(err.stack);
+      console.log('err75')
+      console.error(err.stack);
       res.status(err.status || 500).send(err);
     });
 }
@@ -81,7 +84,7 @@ if (app.get('env') === 'development') {
 // production error handler
 // no stacktraces leaked to user
 app.use(function(err, req, res, next) {
-  console.log('err84');
+  console.error(err.stack);
   res.status(err.status || 500).send(err);
 });
 
