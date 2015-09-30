@@ -271,6 +271,39 @@ router.post('/recordKeyword',function(req, res, next){
   });
 });
 
+router.get('/recordAvg', function(req, res, next){
+  var params          = JSON.parse(req.query.params);
+  var collection_name = 'record';
+  var key_ids         = params.key_ids;
+
+  var find = {keyword_ref:{$in:key_ids}};
+
+  Mongo.getCollection(collection_name, function(err0, collection){
+    if(err0){
+      next(err0);
+    }else{
+      var cursor = collection.find(find, {sort:{keyword_ref:1}});
+      cursor.toArray(function(err2, docs){
+        if(err2){
+          next(err2);
+        }else{
+          //res.status(200).send({result:docs, code:200});
+          var result = {};
+          for(var i in docs){
+            var doc = docs[i];
+            if(!result[doc.keyword_ref]){
+              result[doc.keyword_ref] = 0;
+            }
+            result[doc.keyword_ref] = + result[doc.keyword_ref] + doc.count;
+          }
+
+           res.status(200).send({result:result});
+        }
+      });
+    }
+  });
+});
+
 
 router.get('/findRecord',function(req, res, next){
   var params     = JSON.parse(req.query.params);
@@ -298,7 +331,7 @@ router.get('/findRecord',function(req, res, next){
               result[key] = [];
             }
             result[key].push(doc);
-          }         
+          }
 
           res.status(200).send({result:result});
         }
