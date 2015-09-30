@@ -328,7 +328,7 @@ router.get('/findRecord',function(req, res, next){
           var result = {};
           for(var i in docs){
             var doc = docs[i];
-            var key = doc['_id'];
+            var key = doc['keyword_ref'];
             if(!result[key]){
               result[key] = [];
             }
