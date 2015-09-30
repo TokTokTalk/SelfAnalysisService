@@ -324,8 +324,7 @@ router.get('/findRecord',function(req, res, next){
         if(err1){
           next(err1);
         }else{
-          /*
-          var maxLenth = 0;
+
           var result = {};
           for(var i in docs){
             var doc = docs[i];
@@ -334,13 +333,9 @@ router.get('/findRecord',function(req, res, next){
               result[key] = [];
             }
             result[key].push(doc);
+          }
 
-            if(result[key].length > maxLenth){
-              maxLenth = result[key].length;
-            }
-          }*/
-
-          res.status(200).send({result:docs});
+          res.status(200).send({result:result});
         }
       });
     }
