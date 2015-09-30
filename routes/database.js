@@ -328,11 +328,14 @@ router.get('/findRecord',function(req, res, next){
           var result = {};
           for(var i in docs){
             var doc = docs[i];
-            var key = doc['keyword_ref'];
-            if(!result[key]){
-              result[key] = [];
+            var key1 = doc['keyword_ref'];
+            var key2 = doc['record_dt'];
+            if(!result[key1]){
+              result[key1] = {};
             }
-            result[key].push(doc);
+            
+            result[key1][key2] = doc['count'];
+
           }
 
           res.status(200).send({result:result});
