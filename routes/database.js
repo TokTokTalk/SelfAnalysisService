@@ -288,16 +288,18 @@ router.get('/recordAvg', function(req, res, next){
           next(err2);
         }else{
           //res.status(200).send({result:docs, code:200});
-          var result = {};
+          var merge = {};
+          var sum = 0;
           for(var i in docs){
             var doc = docs[i];
-            if(!result[doc.keyword_ref]){
-              result[doc.keyword_ref] = 0;
+            if(!merge[doc.keyword_ref]){
+              merge[doc.keyword_ref] = 0;
             }
-            result[doc.keyword_ref] = + result[doc.keyword_ref] + doc.count;
+            sum = sum + doc.count;
+            merge[doc.keyword_ref] = merge[doc.keyword_ref] + doc.count;
           }
 
-           res.status(200).send({result:result});
+           res.status(200).send({result:{sum : sum, data : merge}});
         }
       });
     }
