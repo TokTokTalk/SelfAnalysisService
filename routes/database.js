@@ -340,7 +340,7 @@ router.get('/findRecord',function(req, res, next){
             }
           }
 
-          res.status(200).send({result:{data:result, max_len : maxLenth}});
+          res.status(200).send({result:{data:result, max_len : parseInt(maxLenth)}});
         }
       });
     }
