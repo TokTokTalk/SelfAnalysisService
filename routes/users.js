@@ -1,7 +1,6 @@
 var express = require('express');
 var router = express.Router();
 var dateformat = require('dateformat');
-var now    = new Date();
 
 var Mongo = _Common.MongoUtils;
 var Utils    = _Common.Utils;
@@ -131,6 +130,8 @@ function createKeyword(req, res, next){
           var insertKeyword = [];
           var retFileList   = [];
           var idx = 0;
+
+          var now    = new Date();
           for(var i in categoryList){
               var category = categoryList[i];
               var cate_name = category['cate_name'];
