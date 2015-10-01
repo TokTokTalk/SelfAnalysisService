@@ -90,8 +90,8 @@ function createCategoryTemp(req, res, next){
             var obj = {
               cate_name : key,
               seq_number : Number(nextSeq+idx),
-              timestamp : now.getTime(),
-              start_dt  : dateformat(now, 'yyyymmdd'),
+              timestamp : new Date().getTime(),
+              start_dt  : dateformat(new Date(), 'yyyymmdd'),
               user_ref : userRefId.toString()
             }
             insertCategory.push(obj);
@@ -131,7 +131,7 @@ function createKeyword(req, res, next){
           var retFileList   = [];
           var idx = 0;
 
-          var now    = new Date();
+
           for(var i in categoryList){
               var category = categoryList[i];
               var cate_name = category['cate_name'];
@@ -140,7 +140,7 @@ function createKeyword(req, res, next){
                 var keyword = keywordList[k];
                 var keyObj = {
                   keyword : keyword['keyword'],
-                  timestamp : now.getTime(),
+                  timestamp : new Date().getTime(),
                   cate_ref : category['_id'].toString(),
                   seq_number : Number(nextSeq + idx)
                 };
